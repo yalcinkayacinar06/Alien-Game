@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Alien Game</title>
+<style>
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  text-align: center;
+  background: black;
+  color: white;
+}
+
+#gameCanvas {
+  background: #111;
+  display: none;
+  margin: 0 auto;
+  border: 2px solid white;
+}
+
+button {
+  padding: 10px 20px;
+  font-size: 16px;
+  margin-top: 10px;
+  cursor: pointer;
+}
+
+#speechBox {
+  display: none;
+  background: white;
+  color: black;
+  padding: 15px;
+  width: 300px;
+  margin: 20px auto;
+  border-radius: 10px;
+}
+
+#worldReturn {
+  display: none;
+  font-size: 30px;
+  margin-top: 100px;
+}
+</style>
+</head>
+<body>
+
+<h1>Alien Game</h1>
+
+<button id="startBtn">Start</button>
+
+<div id="speechBox">
+  <p id="speechText"></p>
+  <button id="nextBtn">Next</button>
+</div>
+
+<canvas id="gameCanvas" width="600" height="400"></canvas>
+
+<div id="worldReturn">🌍 Dünyaya Dönüş Başarılı! Oyun Bitti!</div>
+
+<script>
+const startBtn = document.getElementById("startBtn");
+const speechBox = document.getElementById("speechBox");
+const speechText = document.getElementById("speechText");
+const nextBtn = document.getElementById("nextBtn");
+const canvas = document.getElementById("gameCanvas");
+const ctx = canvas.getContext("2d");
+const worldReturn = document.getElementById("worldReturn");
+
+let stage = 0;
+let jarsCollected = 0;
+let gameStarted = false;
+let exitUnlocked = false;
+
+let player = { x: 50, y: 50, size: 20 };
+let jars = [];
+let exitDoor = { x: 550, y: 350, size: 30 };
+
+function createJars() {
+  jars = [];
+  for (let i = 0; i < 12; i++) {
+    jars.push({
+      x: Math.random() * 550,
+      y: Math.random() * 350,
+      size: 15,
+      collected: false
+    });
+  }
+}
+
+function drawGame() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  // player
+  ctx.fillStyle = "cyan";
+  ctx.fillRect(player.x, player.y, player.size, player.size);
+
+  // jars
+  ctx.fillStyle = "green";
+  jars.forEach(jar => {
+    if (!jar.collected) {
+      ctx.fillRect(jar.x, jar.y, jar.size, jar.size);
+    }
+  });
+
+  // exit door
+  if (exitUnlocked) {
+    ctx.fillStyle = "red";
+    ctx.fillRect(exitDoor.x, exitDoor.y, exitDoor.size, exitDoor.size);
+  }
+
+  ctx.fillStyle = "white";
+  ctx.fillText("Kavanoz: " + jarsCollected + "/12", 10, 20);
+}
+
+function checkCollision(a, b) {
+  return (
+    a.x < b.x + b.size &&
+    a.x + a.size > b.x &&
+    a.y < b.y + b.size &&
+    a.y + a.size > b.y
+  );
+}
+
+document.addEventListener("keydown", (e) => {
+  if (!gameStarted) return;
+
+  if (e.key === "ArrowUp") player.y -= 5;
+  if (e.key === "ArrowDown") player.y += 5;
+  if (e.key === "ArrowLeft") player.x -= 5;
+  if (e.key === "ArrowRight") player.x += 5;
+
+  jars.forEach(jar => {
+    if (!jar.collected && checkCollision(player, jar)) {
+      jar.collected = true;
+      jarsCollected++;
+    }
+  });
+
+  if (jarsCollected === 12 && !exitUnlocked) {
+    exitUnlocked = true;
+    gameStarted = false;
+    speechBox.style.display = "block";
+    speechText.innerText = "Çıkış kapısını bul ve kaç!";
+  }
+
+  if (exitUnlocked && checkCollision(player, exitDoor)) {
+    canvas.style.display = "none";
+    worldReturn.style.display = "block";
+  }
+
+  drawGame();
+});
+
+startBtn.onclick = () => {
+  startBtn.style.display = "none";
+  speechBox.style.display = "block";
+  speechText.innerText = "Uzay araştırmamızın ilerlemesi için uzaylıların sıvısıyla dolu kavanozları topla.";
+};
+
+nextBtn.onclick = () => {
+  speechBox.style.display = "none";
+  canvas.style.display = "block";
+  gameStarted = true;
+  createJars();
+  drawGame();
+};
+</script>
+
+</body>
+</html>
